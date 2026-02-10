@@ -21,3 +21,18 @@ def home(request: Request):
 def chat(req: ChatRequest):
     reply = handle_query(req.message)
     return {"response": reply}
+from sheets import load_pilots, load_drones, load_missions
+
+
+@app.get("/pilots")
+def get_pilots():
+    return load_pilots().to_dict(orient="records")
+
+@app.get("/drones")
+def get_drones():
+    return load_drones().to_dict(orient="records")
+
+@app.get("/missions")
+def get_missions():
+    return load_missions().to_dict(orient="records")
+

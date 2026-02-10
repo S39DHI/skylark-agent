@@ -2,25 +2,301 @@
 <html>
 <head>
     <title>Drone Ops Agent</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: white;
+        }
+
+        .layout {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* LEFT PANEL */
+        .sidebar {
+            width: 420px;
+            background: #020617;
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid #1f2937;
+        }
+
+        .sidebar h3 {
+            margin-top: 0;
+            color: #93c5fd;
+        }
+
+        .instructions {
+            background: #0f172a;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .table-wrapper {
+            background: #020617;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th, td {
+            padding: 8px 10px;
+            text-align: left;
+        }
+
+        th {
+            background: #020617;
+            color: #93c5fd;
+            font-weight: 600;
+        }
+
+        td {
+            background: #0f172a;
+            border-top: 1px solid #1f2937;
+        }
+
+        /* CHAT AREA */
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: #111827;
+            padding: 18px;
+            font-size: 20px;
+            font-weight: 600;
+            text-align: center;
+            border-bottom: 1px solid #1f2937;
+        }
+
+        .chat {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .message {
+            max-width: 65%;
+            padding: 14px 18px;
+            border-radius: 14px;
+            white-space: pre-wrap;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+        }
+
+        .bot {
+            align-self: flex-start;
+            background: linear-gradient(145deg, #1f2937, #111827);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+
+        .input-area {
+            display: flex;
+            padding: 14px;
+            background: #111827;
+            border-top: 1px solid #1f2937;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            background: #1f2937;
+            color: white;
+        }
+
+        .input-area button {
+            margin-left: 10px;
+            padding: 12px 18px;
+            background: linear-gradient(135deg, #7c3aed, #4f46e5);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Glowing sheet button */
+        .sheet-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #7c3aed, #4f46e5);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            box-shadow: 0 0 12px rgba(124, 58, 237, 0.6);
+            transition: 0.25s ease;
+        }
+
+        .sheet-link:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 0 18px rgba(124, 58, 237, 0.9);
+        }
+    </style>
 </head>
 <body>
-    <h2>Drone Operations Coordinator Agent</h2>
-    <input id="msg" placeholder="Ask something..." />
-    <button onclick="send()">Send</button>
-    <pre id="chat"></pre>
 
-    <script>
-        async function send() {
-            let msg = document.getElementById("msg").value;
-            let res = await fetch("/chat", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({message: msg})
-            });
-            let data = await res.json();
-            document.getElementById("chat").innerText +=
-                "\nYou: " + msg + "\nBot: " + data.response + "\n";
-        }
-    </script>
+<div class="layout">
+
+    <!-- LEFT PANEL -->
+    <div class="sidebar">
+        <h3>Instructions</h3>
+        <div class="instructions">
+            • Give one command at a time<br>
+            • Examples:<br>
+            - Who is available?<br>
+            - Put Arjun on leave<br>
+            - Assign someone to PRJ001<br>
+            - Check conflicts<br>
+            - Available drones
+        </div>
+
+        <h3>Pilots</h3>
+        <div class="table-wrapper" id="pilotsTable"></div>
+
+        <h3>Drones</h3>
+        <div class="table-wrapper" id="dronesTable"></div>
+
+        <h3>Missions</h3>
+        <div class="table-wrapper" id="missionsTable"></div>
+    </div>
+
+    <!-- CHAT AREA -->
+    <div class="chat-container">
+        <div class="header">
+            🚁 Drone Operations Coordinator Agent
+        </div>
+
+        <div class="chat" id="chat"></div>
+
+        <div class="input-area">
+            <input id="msg" placeholder="Type a command..." />
+            <button onclick="send()">Send</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const chat = document.getElementById("chat");
+const input = document.getElementById("msg");
+
+/* Replace with your real sheet link */
+const SHEET_LINK = "https://docs.google.com/spreadsheets/d/1DTGqv56tUHhNTre7ttzq8uo4zG4vTw_HbeSuH0yBgX8/edit?usp=sharing";
+
+/* Add message to chat */
+function addMessage(content, type) {
+    const div = document.createElement("div");
+    div.className = "message " + type;
+    div.textContent = content;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+}
+
+/* Intro message */
+function showIntro() {
+    const div = document.createElement("div");
+    div.className = "message bot";
+
+    div.innerHTML =
+        "Hello! I am the Drone Operations Coordinator Agent.<br><br>" +
+        "<b>I can help you:</b><br>" +
+        "- Check pilot availability<br>" +
+        "- Assign pilots to missions<br>" +
+        "- Update pilot status<br>" +
+        "- Check drone availability<br>" +
+        "- Detect conflicts<br><br>" +
+        "Please give one command at a time.<br><br>" +
+        '<a class="sheet-link" href="' + SHEET_LINK + '" target="_blank">' +
+        "Open Live Google Sheet" +
+        "</a>";
+
+    chat.appendChild(div);
+}
+
+/* Send message */
+async function send() {
+    let msg = input.value.trim();
+    if (!msg) return;
+
+    addMessage(msg, "user");
+    input.value = "";
+
+    let res = await fetch("/chat", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({message: msg})
+    });
+
+    let data = await res.json();
+    addMessage(data.response, "bot");
+
+    loadTables();
+}
+
+input.addEventListener("keypress", function(e) {
+    if (e.key === "Enter") send();
+});
+
+/* Table rendering */
+function renderTable(data) {
+    if (!data.length) return "No data";
+
+    let keys = Object.keys(data[0]);
+    let html = "<table><tr>";
+    keys.forEach(k => html += `<th>${k}</th>`);
+    html += "</tr>";
+
+    data.forEach(row => {
+        html += "<tr>";
+        keys.forEach(k => html += `<td>${row[k]}</td>`);
+        html += "</tr>";
+    });
+
+    html += "</table>";
+    return html;
+}
+
+/* Load tables */
+async function loadTables() {
+    let pilots = await fetch("/pilots").then(r => r.json());
+    let drones = await fetch("/drones").then(r => r.json());
+    let missions = await fetch("/missions").then(r => r.json());
+
+    document.getElementById("pilotsTable").innerHTML = renderTable(pilots);
+    document.getElementById("dronesTable").innerHTML = renderTable(drones);
+    document.getElementById("missionsTable").innerHTML = renderTable(missions);
+}
+
+/* On load */
+loadTables();
+showIntro();
+</script>
+
 </body>
 </html>

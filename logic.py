@@ -6,8 +6,8 @@ def normalize_list_column(df, column):
     )
     return df
 
-def dates_overlap(start1, end1, start2, end2):
-    return not (end1 < start2 or end2 < start1)
+def dates_overlap(s1, e1, s2, e2):
+    return not (e1 < s2 or e2 < s1)
 
 def load_data():
     pilots = pd.read_csv("pilot_roster.csv")
@@ -24,7 +24,7 @@ def load_data():
 
     return pilots, drones, missions
 
-def pilot_conflict(pilot, mission, missions):
+def pilot_has_conflict(pilot, mission, missions):
     if pd.isna(pilot["current_assignment"]):
         return False
     m = missions[missions["project_id"] == pilot["current_assignment"]]
@@ -45,7 +45,7 @@ def find_pilots(mission, pilots, missions):
             continue
         if not set(mission["required_skills"]).issubset(set(p["skills"])):
             continue
-        if pilot_conflict(p, mission, missions):
+        if pilot_has_conflict(p, mission, missions):
             continue
         out.append(p)
     return pd.DataFrame(out)
@@ -64,7 +64,7 @@ def find_drones(mission, drones):
         out.append(d)
     return pd.DataFrame(out)
 
-def assign(mission_id, pilot_id, drone_id):
+def assign_resources(mission_id, pilot_id, drone_id):
     pilots = pd.read_csv("pilot_roster.csv")
     drones = pd.read_csv("drone_fleet.csv")
 

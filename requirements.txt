@@ -3,4 +3,6 @@ uvicorn
 gspread
 oauth2client
 pandas
-google-generativeai
+requests
+python-dotenv
+jinja2

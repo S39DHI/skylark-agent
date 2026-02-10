@@ -1,8 +1,7 @@
 fastapi
 uvicorn
-gspread
-oauth2client
 pandas
-requests
+gspread
+google-auth
+google-generativeai
 python-dotenv
-jinja2

@@ -1,3 +1,5 @@
+import os
+import json
 import gspread
 from google.oauth2.service_account import Credentials
 import pandas as pd
@@ -7,14 +9,22 @@ SCOPE = [
     "https://www.googleapis.com/auth/drive"
 ]
 
-creds = Credentials.from_service_account_file(
-    "credentials.json",
-    scopes=SCOPE
-)
+# Load credentials from environment variable
+def get_client():
+    creds_json = os.getenv("GOOGLE_CREDENTIALS")
 
-client = gspread.authorize(creds)
+    if not creds_json:
+        raise Exception("GOOGLE_CREDENTIALS environment variable not set")
 
-SHEET_NAME = "Skylark Drone Database"
+    creds_dict = json.loads(creds_json)
+    creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPE)
+
+    return gspread.authorize(creds)
+
+
+client = get_client()
+
+SHEET_NAME = os.getenv("SHEET_NAME", "Skylark Drone Database")
 
 
 def load_pilots():

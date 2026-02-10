@@ -17,7 +17,7 @@
 
         /* LEFT PANEL */
         .sidebar {
-            width: 420px;
+            width: 460px;
             background: #020617;
             padding: 20px;
             overflow-y: auto;
@@ -27,22 +27,25 @@
         .sidebar h3 {
             margin-top: 0;
             color: #93c5fd;
+            font-size: 18px;
+            letter-spacing: 0.5px;
         }
 
         .instructions {
             background: #0f172a;
             padding: 14px;
-            border-radius: 10px;
+            border-radius: 12px;
             font-size: 13px;
-            margin-bottom: 20px;
+            margin-bottom: 22px;
             line-height: 1.6;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.4);
         }
 
         .table-wrapper {
             background: #020617;
-            border-radius: 10px;
-            padding: 10px;
-            margin-bottom: 20px;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 22px;
         }
 
         table {
@@ -52,7 +55,7 @@
         }
 
         th, td {
-            padding: 8px 10px;
+            padding: 9px 10px;
             text-align: left;
         }
 
@@ -67,6 +70,10 @@
             border-top: 1px solid #1f2937;
         }
 
+        tr:hover td {
+            background: #111827;
+        }
+
         /* CHAT AREA */
         .chat-container {
             flex: 1;
@@ -76,29 +83,31 @@
 
         .header {
             background: #111827;
-            padding: 18px;
-            font-size: 20px;
+            padding: 20px;
+            font-size: 22px;
             font-weight: 600;
             text-align: center;
             border-bottom: 1px solid #1f2937;
+            letter-spacing: 0.6px;
         }
 
         .chat {
             flex: 1;
-            padding: 20px;
+            padding: 25px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 16px;
         }
 
         .message {
-            max-width: 65%;
+            max-width: 60%;
             padding: 14px 18px;
             border-radius: 14px;
             white-space: pre-wrap;
             font-size: 14px;
             line-height: 1.5;
+            animation: fadeIn 0.3s ease;
         }
 
         .user {
@@ -110,6 +119,39 @@
             align-self: flex-start;
             background: linear-gradient(145deg, #1f2937, #111827);
             box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+
+        /* Typing animation */
+        .typing {
+            display: inline-block;
+        }
+
+        .typing span {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            margin: 0 2px;
+            background: white;
+            border-radius: 50%;
+            animation: bounce 1s infinite ease-in-out;
+        }
+
+        .typing span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .input-area {
@@ -126,6 +168,7 @@
             border: none;
             background: #1f2937;
             color: white;
+            font-size: 14px;
         }
 
         .input-area button {
@@ -137,12 +180,13 @@
             color: white;
             font-weight: bold;
             cursor: pointer;
+            box-shadow: 0 0 12px rgba(124,58,237,0.6);
         }
 
-        /* Glowing sheet button */
+        /* Sheet button */
         .sheet-link {
             display: inline-block;
-            margin-top: 10px;
+            margin-top: 12px;
             padding: 10px 16px;
             background: linear-gradient(135deg, #7c3aed, #4f46e5);
             color: white;
@@ -151,12 +195,6 @@
             font-weight: 600;
             font-size: 13px;
             box-shadow: 0 0 12px rgba(124, 58, 237, 0.6);
-            transition: 0.25s ease;
-        }
-
-        .sheet-link:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 0 18px rgba(124, 58, 237, 0.9);
         }
     </style>
 </head>
@@ -206,10 +244,8 @@
 const chat = document.getElementById("chat");
 const input = document.getElementById("msg");
 
-/* Replace with your real sheet link */
 const SHEET_LINK = "https://docs.google.com/spreadsheets/d/1DTGqv56tUHhNTre7ttzq8uo4zG4vTw_HbeSuH0yBgX8/edit?usp=sharing";
 
-/* Add message to chat */
 function addMessage(content, type) {
     const div = document.createElement("div");
     div.className = "message " + type;
@@ -218,11 +254,9 @@ function addMessage(content, type) {
     chat.scrollTop = chat.scrollHeight;
 }
 
-/* Intro message */
 function showIntro() {
     const div = document.createElement("div");
     div.className = "message bot";
-
     div.innerHTML =
         "Hello! I am the Drone Operations Coordinator Agent.<br><br>" +
         "<b>I can help you:</b><br>" +
@@ -232,20 +266,21 @@ function showIntro() {
         "- Check drone availability<br>" +
         "- Detect conflicts<br><br>" +
         "Please give one command at a time.<br><br>" +
-        '<a class="sheet-link" href="' + SHEET_LINK + '" target="_blank">' +
-        "Open Live Google Sheet" +
-        "</a>";
-
+        '<a class="sheet-link" href="' + SHEET_LINK + '" target="_blank">Open Live Google Sheet</a>';
     chat.appendChild(div);
 }
 
-/* Send message */
 async function send() {
     let msg = input.value.trim();
     if (!msg) return;
 
     addMessage(msg, "user");
     input.value = "";
+
+    const typing = document.createElement("div");
+    typing.className = "message bot";
+    typing.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+    chat.appendChild(typing);
 
     let res = await fetch("/chat", {
         method: "POST",
@@ -254,35 +289,31 @@ async function send() {
     });
 
     let data = await res.json();
+    typing.remove();
     addMessage(data.response, "bot");
 
     loadTables();
 }
 
-input.addEventListener("keypress", function(e) {
+input.addEventListener("keypress", e => {
     if (e.key === "Enter") send();
 });
 
-/* Table rendering */
 function renderTable(data) {
     if (!data.length) return "No data";
-
     let keys = Object.keys(data[0]);
     let html = "<table><tr>";
     keys.forEach(k => html += `<th>${k}</th>`);
     html += "</tr>";
-
     data.forEach(row => {
         html += "<tr>";
         keys.forEach(k => html += `<td>${row[k]}</td>`);
         html += "</tr>";
     });
-
     html += "</table>";
     return html;
 }
 
-/* Load tables */
 async function loadTables() {
     let pilots = await fetch("/pilots").then(r => r.json());
     let drones = await fetch("/drones").then(r => r.json());
@@ -293,7 +324,6 @@ async function loadTables() {
     document.getElementById("missionsTable").innerHTML = renderTable(missions);
 }
 
-/* On load */
 loadTables();
 showIntro();
 </script>

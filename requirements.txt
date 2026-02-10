@@ -1,2 +1,6 @@
+fastapi
+uvicorn
+gspread
+oauth2client
 pandas
-streamlit
+google-generativeai

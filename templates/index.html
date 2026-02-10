@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Skylark Drone Agent</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            padding-top: 40px;
+        }
+        .chat-container {
+            width: 400px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        #chat-box {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        input {
+            width: 75%;
+            padding: 8px;
+        }
+        button {
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <h3>Skylark Drone Agent</h3>
+        <div id="chat-box"></div>
+        <input id="message" placeholder="Type a message..." />
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const input = document.getElementById("message");
+            const chatBox = document.getElementById("chat-box");
+            const message = input.value;
+
+            chatBox.innerHTML += `<div><b>You:</b> ${message}</div>`;
+
+            const response = await fetch("/chat", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({message})
+            });
+
+            const data = await response.json();
+            chatBox.innerHTML += `<div><b>Agent:</b> ${data.response}</div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            input.value = "";
+        }
+    </script>
+</body>
+</html>

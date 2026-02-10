@@ -5,3 +5,4 @@ gspread
 google-auth
 google-generativeai
 python-dotenv
+jinja2
